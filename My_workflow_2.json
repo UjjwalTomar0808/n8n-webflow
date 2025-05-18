@@ -1,0 +1,407 @@
+{
+  "name": "My workflow 2",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -440,
+        -60
+      ],
+      "id": "b70449ad-471e-4cee-8b3c-a2fb4b7fd01e",
+      "name": "When clicking ‘Test workflow’"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1VNjYudehvW0IhoJ7iXgAYjQJ4Hb-28iRCWkEXoJTqLY",
+          "mode": "list",
+          "cachedResultName": "Welcome Email Generator",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1VNjYudehvW0IhoJ7iXgAYjQJ4Hb-28iRCWkEXoJTqLY/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1VNjYudehvW0IhoJ7iXgAYjQJ4Hb-28iRCWkEXoJTqLY/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "status",
+              "lookupValue": "not-send"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        -220,
+        -60
+      ],
+      "id": "2a5b6a5f-f66e-434f-9741-d1c9cbdbb0d6",
+      "name": "Google Sheets",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "2zb7iuBpvUaEelJX",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {
+          "reset": true
+        }
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        0,
+        -60
+      ],
+      "id": "abf67119-459d-4772-85de-70f8a316ea0f",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "af49db01-2e84-4a05-b263-b42096849848",
+              "name": "email",
+              "value": "={{ $json.email }}",
+              "type": "string"
+            },
+            {
+              "id": "081c6ab0-39f1-474f-9d41-6ae964eb99c8",
+              "name": "name",
+              "value": "={{ $json.name }}",
+              "type": "string"
+            },
+            {
+              "id": "0d8b0680-fc59-43f5-ba7b-60a890642165",
+              "name": "status",
+              "value": "={{ $json.status }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        260,
+        -40
+      ],
+      "id": "71ca7acc-bf3b-4009-ac66-13e0c98c5c38",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=A new user has signed up and should receive a welcome email.\n\nFull Name:{{ $('Loop Over Items').item.json.name }}\nEmail:{{ $('Loop Over Items').item.json.email }}\n\nWrite a warm, friendly, and personalized welcome email introducing them to our platform. Mention a few features they can explore, and let them know they can reach out with questions. Keep it short, clear, and engaging.\nsend a confirmation email to yourself after each mail is sent",
+        "options": {
+          "systemMessage": "=You are a friendly and efficient automation assistant!\nFor each contact in the loop:\n1 Retrieve the contact details from Google Sheets\n2 Send a personalized email using Gmail\n3 Update the 'Sent' status in Google Sheets\n4.also send the content of welcome mail to store it in sheet\n5.Send a confirmation email to yourself after each email is sent\n6.(Optional) If needed, send a copy (CC) to an additional email\n\nEnsure each step is successfully completed before processing the next"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.9,
+      "position": [
+        480,
+        -40
+      ],
+      "id": "68bf1ece-83c6-4ab4-ac71-ad3bbdb230ab",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        440,
+        200
+      ],
+      "id": "7e60f659-5341-45cc-8d39-c4b7640f2bd6",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "4trwx1MAvvw39ANv",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Loop Over Items').item.json.email }}",
+        "subject": "=Welcome {{ $('Loop Over Items').item.json.name }} to our product! ",
+        "message": "=",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmailTool",
+      "typeVersion": 2.1,
+      "position": [
+        860,
+        180
+      ],
+      "id": "44ae16a6-20c7-4644-a3e4-e8c02f9b79ad",
+      "name": "Gmail",
+      "webhookId": "7e56181e-0319-45b0-ab8c-1e0e0931b8cc",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "wBodRC5pCtj1o48j",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1VNjYudehvW0IhoJ7iXgAYjQJ4Hb-28iRCWkEXoJTqLY",
+          "mode": "list",
+          "cachedResultName": "Welcome Email Generator",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1VNjYudehvW0IhoJ7iXgAYjQJ4Hb-28iRCWkEXoJTqLY/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1VNjYudehvW0IhoJ7iXgAYjQJ4Hb-28iRCWkEXoJTqLY/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "status": "send",
+            "email": "={{ $('Loop Over Items').item.json.email }}",
+            "content": "=hii,{{ $json.name }}, Welcome to our platform..."
+          },
+          "matchingColumns": [
+            "email"
+          ],
+          "schema": [
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "content",
+              "displayName": "content",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.5,
+      "position": [
+        700,
+        180
+      ],
+      "id": "cd5cef0e-369b-4b15-bc40-2fc2d406c289",
+      "name": "Google Sheets1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "2zb7iuBpvUaEelJX",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "=ujjwaltomar.0808@gmail.com",
+        "subject": "=Confirmation Mail sent to  {{ $('Loop Over Items').item.json.name }}",
+        "message": "={{ $json.output }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        960,
+        -40
+      ],
+      "id": "05f3a061-16b8-464b-a445-1c2b08258bc1",
+      "name": "Gmail1",
+      "webhookId": "be618bbd-c60d-4968-8652-bf5533100f86",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "wBodRC5pCtj1o48j",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Test workflow’": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets1": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Gmail1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail1": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "d57c2baf-9873-4a12-8dd2-9e4670a859e8",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "e91ae09a72c8db68342f78e55adfb9a3b5ed363afa48be9801dc42605d480fa3"
+  },
+  "id": "fhePu47OsuxWH3vu",
+  "tags": []
+}
